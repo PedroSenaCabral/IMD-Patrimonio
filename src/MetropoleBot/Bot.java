@@ -18,17 +18,17 @@ class Bot
     /**
      * Bot criado para controlar acervo do instituto metropole digital
      *
-     * @param log referencia para a area de log na interface
-     * @param con conexao com o banco
-     * @param bot bot criado com o token gerado pelo bot father e desenvolvido por pengrad
+     *  log referencia para a area de log na interface
+     *  con conexao com o banco
+     *  bot bot criado com o token gerado pelo bot father e desenvolvido por pengrad
      * token de teste 927616899:AAFD419_B2phsx5iFtjM3hM17cvVkNTkO9Q
      * token de producao 1068564256:AAGsb9uiUmM37Vpnkrl7cQPKjVWrgKI-2NQ
-     * @param locais locais do IMD
-     * @param bens bens do IMD
-     * @param categorias categorias dos bens
-     * @param chatId id do chat atual
-     * @param msg mensagem vinda do chat
-     * @param now data que o bot recebe a acao
+     *  locais locais do IMD
+     *  bens bens do IMD
+     *  categorias categorias dos bens
+     *  chatId id do chat atual
+     *  msg mensagem vinda do chat
+     *  now data que o bot recebe a acao
      */
     private TextArea log;
     private Connection con = null;
@@ -130,16 +130,22 @@ class Bot
                 {
                     generateReportInFile();
                 }
-                else if(msg.contains("Carregar dados"))
+                else if(msg.contains("carregar dados"))
                 {
                     // TODO
                 }
-                else if(msg.contains("Apagar localização"))
+                else if(msg.contains("apagar localização"))
                 {
                     deleteLocal();
                 }
-                else if(msg.contains("Apagar categoria")) ;
-                else if(msg.contains("Apagar bem")) ;
+                else if(msg.contains("apagar categoria"))
+                {
+                    deleteCat();
+                }
+                else if(msg.contains("apagar bem"))
+                {
+                    deleteBem();
+                }
                 else if(msg.contains("-help"))
                 {
                     help();
@@ -159,6 +165,85 @@ class Bot
     }
 
     /**
+     * Mostra para o usuario os possiveis comandos e seus argumentos
+     */
+    private void help()
+    {
+        /*TODO
+            "Carregar dados"
+        */
+        String comandos = "Comandos possíveis:\n" +
+                "cadastrar localização -localização *** -descrição ***\n" +
+                "cadastrar categoria de bem -código *** -nome *** -descrição ***\n" +
+                "cadastrar bem -código *** -nome *** -descrição *** -localização *** -categoria ***\n" +
+                "listar localizações\n" +
+                "listar categorias\n" +
+                "listar bens de uma localização -localização ***\n" +
+                "buscar bem por código -código ***\n" +
+                "buscar bem por nome -nome ***\n" +
+                "buscar bem por descrição -descrição ***\n" +
+                "movimentar bem -código *** -localização ***\n" +
+                "gerar relatório\n" +
+                "gerar relatório -arquivo\n" +
+                "apagar localização -localização ***\n" +
+                "apagar categoria -nome ***\n" +
+                "apagar bem -código ***\n";
+        bot.execute(new SendMessage(chatId, comandos));
+    }
+
+
+    /**
+     * Apaga o bem
+     */
+    private void deleteBem()
+    {
+        if(msg.contains("-código"))
+        {
+            String codeFlag = "-código ";
+            final int codeIndex = msg.indexOf(codeFlag) + codeFlag.length();
+            String code = msg.substring(codeIndex);
+
+            try
+            {
+                if(bens.delete(code, con))
+                    bot.execute(new SendMessage(chatId, "Bem apagado com sucesso"));
+                else
+                    bot.execute(new SendMessage(chatId, "Não foi possível apagar o bem"));
+            }
+            catch(SQLException e)
+            {
+                bot.execute(new SendMessage(chatId, "Erro ao apagar bem"));
+            }
+        }
+        else
+            bot.execute(new SendMessage(chatId, "Erro ao apagar bem " +
+                    "(apagar bem -código ***)"));
+    }
+
+
+    /**
+     * Apaga a categoria se ela nao estiver em uso
+     */
+    private void deleteCat()
+    {
+        String nomeFlag = "-nome ";
+        final int nomeIndex = msg.indexOf(nomeFlag) + nomeFlag.length();
+        String nomeCat = msg.substring(nomeIndex);
+
+        try
+        {
+            if(categorias.delete(nomeCat, con))
+                bot.execute(new SendMessage(chatId, "Categoria apagada com sucesso"));
+            else
+                bot.execute(new SendMessage(chatId, "Não foi possível apagar a categoria"));
+        }
+        catch(SQLException e)
+        {
+            bot.execute(new SendMessage(chatId, "Erro ao apagar categoria"));
+        }
+    }
+
+    /**
      * Apaga a localizacao se ela nao estiver em uso
      */
     private void deleteLocal()
@@ -167,7 +252,17 @@ class Bot
         final int localIndex = msg.indexOf(localFlag) + localFlag.length();
         String local = msg.substring(localIndex);
 
-        locais.delete(local);
+        try
+        {
+            if(locais.delete(local, con))
+                bot.execute(new SendMessage(chatId, "Local apagado com sucesso"));
+            else
+                bot.execute(new SendMessage(chatId, "Não foi possível apagar o local"));
+        }
+        catch(SQLException e)
+        {
+            bot.execute(new SendMessage(chatId, "Erro ao apagar local"));
+        }
     }
 
     /**
@@ -242,34 +337,6 @@ class Bot
 
         bot.execute(new SendMessage(chatId, report.toString()));
     }
-
-    /**
-     * Mostra para o usuario os possiveis comandos e seus argumentos
-     */
-    private void help()
-    {
-        /*TODO
-        else if(msg.contains("gerar relatório -arquivo")) ;
-        else if(msg.contains("Carregar dados")) ;
-        else if(msg.contains("Apagar localização")) ;
-        else if(msg.contains("Apagar categoria")) ;
-        else if(msg.contains("Apagar bem")) ;
-        */
-        String comandos = "Comandos possíveis:\n" +
-                "cadastrar localização -localização *** -descrição ***\n" +
-                "cadastrar categoria de bem -código *** -nome *** -descrição ***\n" +
-                "cadastrar bem -código *** -nome *** -descrição *** -localização *** -categoria ***\n" +
-                "listar localizações\n" +
-                "listar categorias\n" +
-                "listar bens de uma localização -localização ***\n" +
-                "buscar bem por código -código ***\n" +
-                "buscar bem por nome -nome ***\n" +
-                "buscar bem por descrição -descrição ***\n" +
-                "movimentar bem -código *** -localização ***\n" +
-                "gerar relatório\n";
-        bot.execute(new SendMessage(chatId, comandos));
-    }
-
 
     /**
      * Move um bem, identificado pelo seu codigo de um local salvo no banco, para outro, e trata as excecoes geradas
@@ -649,7 +716,7 @@ class Bot
             }
         }
         else
-            bot.execute(new SendMessage(chatId, "Erro ao cadastrar categoria de bem " +
+            bot.execute(new SendMessage(chatId, "Erro ao cadastrar bem " +
                     "(cadastrar bem -código *** -nome *** -descrição *** -localização *** -categoria ***)"));
     }
 

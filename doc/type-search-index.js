@@ -1,1 +1,1 @@
-typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"MetropoleBot","l":"Bem"},{"p":"MetropoleBot","l":"Controller"},{"p":"MetropoleBot","l":"Main"}]
+typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"MetropoleBot","l":"Bem"},{"p":"MetropoleBot","l":"Bens"},{"p":"MetropoleBot","l":"Bot"},{"p":"MetropoleBot","l":"Categoria"},{"p":"MetropoleBot","l":"Categorias"},{"p":"MetropoleBot","l":"Controller"},{"p":"MetropoleBot","l":"Locais"},{"p":"MetropoleBot","l":"Local"},{"p":"MetropoleBot","l":"Main"}]
