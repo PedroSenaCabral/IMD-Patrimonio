@@ -88,40 +88,18 @@ class Categorias
             return null;
     }
 
-    /*
-     * Lista categorias
+    /**
+     * Gera uma lista de categorias que estao salvas no banco
+     *
+     * @param con conexao com o banco
+     * @return retorna uma lista de categorias, ou null caso nao possua categorias cadastradas
      */
-    public void listarCategorias()
+    ResultSet list(Connection con) throws SQLException
     {
-        for(Categoria categoria: categorias)
-        {
-            System.out.println(categoria);
-        }
-    }
+        String sql = "SELECT nome FROM categorias";
 
-    /*
-     * Exclui categorias por nome
-     */
-    public void excluirCategoria(String nome)
-    {
-        for(Categoria categoria: categorias)
-        {
-            if(nome.equals(categoria.getNome()))
-            {
-                categorias.remove(categoria);
-            }
-            System.out.println("Item nao existe");
-        }
-    }
+        PreparedStatement stmt = con.prepareStatement(sql);
 
-    /*
-     * Relatorio de categorias
-     */
-    void relatorioCategoria()
-    {
-        for(Categoria categoria: categorias)
-        {
-            System.out.println(categoria);
-        }
+        return stmt.executeQuery();
     }
 }

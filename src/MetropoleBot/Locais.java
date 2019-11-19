@@ -4,28 +4,21 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
-public class Locais
+class Locais
 {
-    private ArrayList<Local> locais;
-
-    Locais()
-    {
-        this.locais = new ArrayList<>();
-    }
-
-    /*
-     * Metodo para cadastrar uma localizacao
+    /**
+     * Verifica se o local ja existe no banco, se nao existir o cadastra, caso contrario nao faz nada
+     *
+     * @param local localizacao a ser cadastrada
+     * @param con   conexao com o banco
+     * @return retorna true se a localizacao nao existe no banco e a cadastrou, false caso contrario
+     * @throws SQLException tratamento basico de excecao
      */
     boolean cadastrarLocal(Local local, Connection con) throws SQLException
     {
         if(find(local, con))
         {
-
-            this.locais.add(local);
-
-
             String sql = "INSERT INTO locais (nome, descricao) values(?, ?)";
 
             PreparedStatement stmt = con.prepareStatement(sql);
@@ -33,76 +26,27 @@ public class Locais
             stmt.setString(1, local.getNome());
             stmt.setString(2, local.getDescricao());
 
-            stmt.executeUpdate();
-
-            return true;
+            return stmt.executeUpdate() > 0;
         }
         return false;
     }
 
 
-    /*
-     * Metodo para listar as localizacao cadastradas
+    /**
+     * Lista os locais cadastrados no banco
+     *
+     * @param con conexao com o banco
+     * @return retorna o resultado da consulta
+     * @throws SQLException tratamento basico de excecao
      */
-    public void listarLocais()
+    ResultSet list(Connection con) throws SQLException
     {
-        for(Local local: locais)
-        {
-            System.out.println(local);
-        }
-    }
+        String sql = "SELECT nome FROM locais";
 
-    /*
-     * Metodo para exclusao de localizacao cadastrada
-     */
-    public void excluirLocal(String nome)
-    {
-        for(Local local: locais)
-        {
-            if(nome.equals(local.getNome()))
-            {
-                locais.remove(local);
-            }
-            System.out.println("Item nao existe");
-        }
-    }
+        PreparedStatement stmt = con.prepareStatement(sql);
 
-    /*
-     * Metodo para trocar a localizacao cadastrada de um local
-     */
-    /*
-    public void movimentarBem(ArrayList<String> tipoBens, int Codigo, String novaLocalizacao)
-    {
-        for(Local local: locais)
-        {
-            if(novaLocalizacao.equals(local.getNome()))
-            {
-                for(String tipobem: tipoBens)
-                {
-                    if(Codigo == this.getCodigo())
-                    {
-                        tipoBens.remove(tipobem);
-                        tipoBens.add(novaLocalizacao);
-                    }
-                }
-            }
-        }
+        return stmt.executeQuery();
     }
-*/
-    /*
-     * Metodo para criar relatorio por localizacao em seguida por categoria
-     * !!!Falta ordenacao alfabetica
-     */
-    /*
-    public void relatorioLocalizacaoCategoria()
-    {
-        for(Local local: locais)
-        {
-            System.out.println(local);
-            this.relatorioCategoria();
-        }
-    }
-*/
 
     /**
      * Busca por um objeto local, usando seu nome, no banco
@@ -148,5 +92,15 @@ public class Locais
             return result.getString("id");
         else
             return null;
+    }
+
+    /**
+     * Verifica se a localizacao nao esta em uso no banco de dados, se nao estiver, apaga, caso contrario nao faz nada
+     *
+     * @param local localizacao a ser apagada
+     */
+    public void delete(String local)
+    {
+        // TODO delete from locais where locais.nome = 'corredor'
     }
 }
