@@ -2,56 +2,22 @@ package MetropoleBot;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class Bem extends Categorias
+public class Bens
 {
-    private ArrayList<String> tipoBens;
-    private int codigo;
-    private String nome;
-    private String descricao;
-    private Local localizacao;
-    private Categoria categoria;
+    private ArrayList<Bem> bens;
 
-    /*
-     * Construtor de classe TipoBem
-     */
-    public Bem(ArrayList<String> bem, int codigo, String nome, String descricao, Local localizacao, Categoria categoria)
+    Bens()
     {
-        super();
-        tipoBens = bem;
-        this.codigo = codigo;
-        this.nome = nome;
-        this.descricao = descricao;
-        this.localizacao = localizacao;
-        this.categoria = categoria;
+        bens = new ArrayList<>();
     }
 
-    Bem()
+    public ArrayList<Bem> getBens()
     {
-        super();
-    }
-
-    public Bem(String msgCodigo, String msgNome, String msgDescricao, String msgLocalizacao, String msgCategoria)
-    {
-    }
-
-    public void setTipoBens(ArrayList<String> tipoBens)
-    {
-        this.tipoBens = tipoBens;
-    }
-
-    public ArrayList<String> getTipoBens()
-    {
-        return tipoBens;
-    }
-
-    /*
-     * Cadastrar Tipo de bem
-     */
-    public void cadastrarBem(String tipobem)
-    {
-        tipoBens.add(tipobem);
+        return bens;
     }
 
     /*
@@ -59,36 +25,21 @@ public class Bem extends Categorias
      */
     public void listarTipobem()
     {
-        for(String tipobem: tipoBens)
+        for(Bem bem: bens)
         {
-            System.out.println(tipobem);
+            System.out.println(bem);
         }
-    }
-
-    public int getCodigo()
-    {
-        return codigo;
-    }
-
-    public String getNome()
-    {
-        return nome;
-    }
-
-    public String getDescricao()
-    {
-        return descricao;
     }
 
     /*
      * Buscar Tipo de bem por codigo
      */
-    public void buscarBemCodigo(int Codigo)
+    public void buscarBemCodigo(String Codigo)
     {
-        for(String tipobem: tipoBens)
+        for(Bem bem: bens)
         {
-            if(Codigo == this.codigo)
-                System.out.println(tipobem);
+            if(Codigo.equals(bem.getCodigo()))
+                System.out.println(bem);
         }
         System.out.println("Item nao existe");
     }
@@ -98,11 +49,11 @@ public class Bem extends Categorias
      */
     public void buscarBemNome(String Nome)
     {
-        for(String tipobem: tipoBens)
+        for(Bem bem: bens)
         {
-            if(Nome.equals(this.nome))
+            if(Nome.equals(bem.getNome()))
             {
-                System.out.println(tipobem);
+                System.out.println(bem);
             }
         }
         System.out.println("Item nao existe");
@@ -113,11 +64,11 @@ public class Bem extends Categorias
      */
     public void buscarBemDescricao(String Descricao)
     {
-        for(String tipobem: tipoBens)
+        for(Bem bem: bens)
         {
-            if(Descricao.equals(this.descricao))
+            if(Descricao.equals(bem.getDescricao()))
             {
-                System.out.println(tipobem);
+                System.out.println(bem);
             }
             System.out.println("Item nao existe");
         }
@@ -128,37 +79,52 @@ public class Bem extends Categorias
      */
     public void excluirTipoBem(String Nome)
     {
-        for(String tipobem: tipoBens)
+        for(Bem bem: bens)
         {
-            if(Nome.equals(this.nome))
+            if(Nome.equals(bem.getNome()))
             {
-                tipoBens.remove(tipobem);
+                bens.remove(bem);
             }
             System.out.println("Item nao existe");
         }
     }
 
-    public boolean cadastrarBem(Bem bem, Connection con)
+    boolean cadastrarBem(Bem bem, String idCategoria, String idLocal, Connection con) throws SQLException
     {
-        for(Categoria cat: categorias)
+
+        if(find(bem, con))
         {
-            if(cat.getNome().equals(categoria.getNome()))
-                return false;
+            this.bens.add(bem);
+
+            String sql = "INSERT INTO bens (codigo, nome, descricao, idLocalizacao, idCategoria) values(?, ?, ?, ?, ?)";
+
+            PreparedStatement stmt = con.prepareStatement(sql);
+
+            stmt.setString(1, bem.getCodigo());
+            stmt.setString(2, bem.getNome());
+            stmt.setString(3, bem.getDescricao());
+            stmt.setString(4, idLocal);
+            stmt.setString(5, idCategoria);
+
+            stmt.executeUpdate();
+
+            return true;
         }
 
-        this.categorias.add(categoria);
+        else
+            return false;
+    }
 
-
-        String sql = "INSERT INTO categorias values(?, ?, ?)";
+    private boolean find(Bem bem, Connection con) throws SQLException
+    {
+        String sql = "SELECT id FROM bens WHERE codigo = ?";
 
         PreparedStatement stmt = con.prepareStatement(sql);
 
-        stmt.setString(1, categoria.getCodigo());
-        stmt.setString(2, categoria.getNome());
-        stmt.setString(3, categoria.getDescricao());
+        stmt.setString(1, bem.getCodigo());
 
-        stmt.executeUpdate();
+        ResultSet result = stmt.executeQuery();
 
-        return true;
+        return !result.next();
     }
 }

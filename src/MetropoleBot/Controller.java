@@ -19,7 +19,7 @@ public class Controller
 	{
 		if(started)
 		{
-			log.setText("Fala Desgraça");
+			log.setText("Bot iniciado");
 			Bot bot = new Bot(log);
 
 			bot.start();

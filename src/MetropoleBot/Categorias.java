@@ -1,37 +1,41 @@
 package MetropoleBot;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
-class Categoria
+class Categorias
 {
 
-    private ArrayList<String> categorias;
-    private String nomeCategoria;
+    private ArrayList<Categoria> categorias;
+    private Categoria nomeCategoria;
 
     /*
      * Construtor de categorias
      */
-    Categoria(ArrayList<String> categorias)
+    Categorias(ArrayList<Categoria> categorias)
     {
         this.categorias = categorias;
     }
 
-    Categoria()
+    Categorias()
     {
         this.categorias = new ArrayList<>();
     }
 
-    public void setCategorias(ArrayList<String> categorias)
+    public void setCategorias(ArrayList<Categoria> categorias)
     {
         this.categorias = categorias;
     }
 
-    void setCategoria(String categoria)
+    void setCategoria(Categoria categoria)
     {
         this.nomeCategoria = categoria;
     }
 
-    public ArrayList<String> getCategorias()
+    public ArrayList<Categoria> getCategorias()
     {
         return categorias;
     }
@@ -39,9 +43,41 @@ class Categoria
     /*
      * Cria novas categorias
      */
-    public void cadastrarCategoria(String categoria)
+    boolean cadastrarCategoria(Categoria categoria, Connection con) throws SQLException
     {
-        categorias.add(categoria);
+        if(find(categoria, con))
+        {
+
+            this.categorias.add(categoria);
+
+
+            String sql = "INSERT INTO categorias(codigo, nome, descricao) values(?, ?, ?)";
+
+            PreparedStatement stmt = con.prepareStatement(sql);
+
+            stmt.setString(1, categoria.getCodigo());
+            stmt.setString(2, categoria.getNome());
+            stmt.setString(3, categoria.getDescricao());
+
+            stmt.executeUpdate();
+
+            return true;
+        }
+        else
+            return false;
+    }
+
+    private boolean find(Categoria categoria, Connection con) throws SQLException
+    {
+        String sql = "SELECT id FROM categorias WHERE nome = ?";
+
+        PreparedStatement stmt = con.prepareStatement(sql);
+
+        stmt.setString(1, categoria.getNome());
+
+        ResultSet result = stmt.executeQuery();
+
+        return !result.next();
     }
 
     /*
@@ -49,7 +85,7 @@ class Categoria
      */
     public void listarCategorias()
     {
-        for(String categoria: categorias)
+        for(Categoria categoria: categorias)
         {
             System.out.println(categoria);
         }
@@ -60,9 +96,9 @@ class Categoria
      */
     public void excluirCategoria(String nome)
     {
-        for(String categoria: categorias)
+        for(Categoria categoria: categorias)
         {
-            if(nome.equals(this.nomeCategoria))
+            if(nome.equals(this.nomeCategoria.getNome()))
             {
                 categorias.remove(categoria);
             }
@@ -75,9 +111,25 @@ class Categoria
      */
     void relatorioCategoria()
     {
-        for(String categoria: categorias)
+        for(Categoria categoria: categorias)
         {
             System.out.println(categoria);
         }
+    }
+
+    String find(String categoria, Connection con) throws SQLException
+    {
+        String sql = "SELECT id FROM categorias WHERE nome = ?";
+
+        PreparedStatement stmt = con.prepareStatement(sql);
+
+        stmt.setString(1, categoria);
+
+        ResultSet result = stmt.executeQuery();
+
+        if(result.next())
+            return result.getString("id");
+        else
+            return null;
     }
 }
