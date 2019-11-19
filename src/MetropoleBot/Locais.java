@@ -6,18 +6,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class Localizacao
+public class Locais
 {
     private ArrayList<Local> locais;
 
-    Localizacao()
+    Locais()
     {
         this.locais = new ArrayList<>();
-    }
-
-    public ArrayList<Local> getLocais()
-    {
-        return locais;
     }
 
     /*
@@ -108,6 +103,15 @@ public class Localizacao
         }
     }
 */
+
+    /**
+     * Busca por um objeto local, usando seu nome, no banco
+     *
+     * @param local local(objeto) a ser procurado
+     * @param con   conexao com o banco
+     * @return retorna true se existe, false se nao
+     * @throws SQLException tratamento basico de excecao
+     */
     private boolean find(Local local, Connection con) throws SQLException
     {
         String sql = "SELECT id FROM locais WHERE nome = ?";
@@ -122,13 +126,21 @@ public class Localizacao
 
     }
 
-    String find(String localizacao, Connection con) throws SQLException
+    /**
+     * Busca por um nome de local no banco
+     *
+     * @param local local(string) a ser procurado
+     * @param con   conexao com o banco
+     * @return retorna true se existe, false se nao
+     * @throws SQLException tratamento basico de excecao
+     */
+    String find(String local, Connection con) throws SQLException
     {
         String sql = "SELECT id FROM locais WHERE nome = ?";
 
         PreparedStatement stmt = con.prepareStatement(sql);
 
-        stmt.setString(1, localizacao);
+        stmt.setString(1, local);
 
         ResultSet result = stmt.executeQuery();
 

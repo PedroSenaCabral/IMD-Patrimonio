@@ -7,24 +7,24 @@ import javafx.scene.control.TextArea;
 
 public class Controller
 {
-	@FXML
-	Button start;
-	@FXML
-	TextArea log;
+    @FXML
+    Button start;    // Butao de iniciar
+    @FXML
+    TextArea log;    // Area de log
 
-	private boolean started = true;
+    private boolean started = false;
 
-	@FXML
-	void start()
-	{
-		if(started)
-		{
-			log.setText("Bot iniciado");
-			Bot bot = new Bot(log);
+    @FXML
+    void start()
+    {
+        if(!started)
+        {
+            log.setText(">>> Bot iniciado!");
+            Bot bot = new Bot(log);
 
-			bot.start();
+            bot.start();
 
-			started = true;
-		}
-	}
+            started = true;
+        }
+    }
 }

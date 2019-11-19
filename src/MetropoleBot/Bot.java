@@ -11,19 +11,26 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-
 class Bot
 {
+    /**
+     * Bot criado para controlar acervo do instituto metropole digital
+     *
+     * @param log referencia para a area de log na interface
+     * @param con conexao com o banco
+     * @param bot bot criado com o token gerado pelo bot father e desenvolvido por pengrad
+     * token de teste 927616899:AAFD419_B2phsx5iFtjM3hM17cvVkNTkO9Q
+     * token de producao 1068564256:AAGsb9uiUmM37Vpnkrl7cQPKjVWrgKI-2NQ
+     * @param locais locais do IMD
+     * @param bens bens do IMD
+     * @param categorias categorias dos bens
+     */
     private TextArea log;
     private Connection con = null;
-    // bot created with code from botfather
-    // test 927616899:AAFD419_B2phsx5iFtjM3hM17cvVkNTkO9Q
-    // prod 1068564256:AAGsb9uiUmM37Vpnkrl7cQPKjVWrgKI-2NQ
     private TelegramBot bot = new TelegramBot("927616899:AAFD419_B2phsx5iFtjM3hM17cvVkNTkO9Q");
-    private Localizacao localizacao = new Localizacao();
+    private Locais locais = new Locais();
     private Bens bens = new Bens();
     private Categorias categorias = new Categorias();
-
 
 
     Bot(TextArea log)
@@ -31,6 +38,7 @@ class Bot
         this.log = log;
     }
 
+    // Acao realizada apos pressionar o botao de start, inicia a conexao com o banco e logo apos o bot
     void start()
     {
         connect();
@@ -41,15 +49,21 @@ class Bot
             return;
         }
 
-        botAction();
+        listen();
     }
 
-    private void botAction()
+    // Faz o bot esperar por acoes dos usuarios
+    private void listen()
     {
-        // Register for updates
+        // Registra atualizacoes
         bot.setUpdatesListener(updates -> {
-            // Process updates
+            // Processa as atualizacoes
             updates.forEach(update -> {
+                /*
+                 * @param chatId id do chat atual
+                 * @param msg mensagem vinda do chat
+                 * @param now data que o bot recebe a acao
+                 */
                 long chatId = update.message().chat().id();
                 String msg = update.message().text();
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
@@ -94,7 +108,7 @@ class Bot
                     }
                     else
                         bot.execute(new SendMessage(chatId, "Erro ao cadastrar categoria de bem " +
-                                "(cadastrar localização -codigo *** -nome *** -descrição ***)"));
+                                "(cadastrar categoria de bem -codigo *** -nome *** -descrição ***)"));
                 }
                 else if(msg.contains("cadastrar bem"))
                 {
@@ -129,6 +143,14 @@ class Bot
                 else if(msg.contains("Apagar localização")) ;
                 else if(msg.contains("Apagar categoria")) ;
                 else if(msg.contains("Apagar bem")) ;
+                else if(msg.contains("-help"))
+                {
+                    String comandos = "Comandos possíveis:\n" +
+                            "cadastrar localização -local *** -descrição ***\n" +
+                            "cadastrar categoria de bem -codigo *** -nome *** -descrição ***\n" +
+                            "cadastrar bem -codigo *** -nome *** -descrição *** -localização *** -categoria ***\n";
+                    bot.execute(new SendMessage(chatId, comandos));
+                }
                 else
                     bot.execute(new SendMessage(chatId, "Comando inválido!"));
 
@@ -138,39 +160,49 @@ class Bot
                 log.appendText("\n" + timeFormatter.format(now) + " - chatID: " + chatId + " - msg: " + msg);
             });
 
-            // Return id of last processed update or confirm them all
+            // Retorna id da ultima atualizacao processada ou confirma todas
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });
     }
 
+    /**
+     * @param msg    mensagem enviada pelo usuario
+     * @param chatId id correspondente ao chat da mensagem
+     * @return true se conseguir cadastrar o bem e false caso contrario
+     * @throws SQLException tratamento simples de excecao
+     */
     private boolean cadastrarBem(String msg, long chatId) throws SQLException
     {
-        String codigo = "-codigo ";
-        String nome = "-nome ";
-        String descricao = "-descrição ";
-        String local = "-localização ";
-        String categoria = "-categoria ";
+        String codigoFlag = "-codigoFlag ";
+        String nomeFlag = "-nomeFlag ";
+        String descricaoFlag = "-descrição ";
+        String localFlag = "-localização ";
+        String categoriaFlag = "-categoriaFlag ";
 
-        final int codigoIndex = msg.indexOf(codigo) + codigo.length();
-        final int nomeIndex = msg.indexOf(nome) + nome.length();
-        final int descricaoIndex = msg.indexOf(descricao) + descricao.length();
-        final int localizacaoIndex = msg.indexOf(local) + local.length();
-        final int categoriaIndex = msg.indexOf(categoria) + categoria.length();
+        final int indexCodigo = msg.indexOf(codigoFlag) + codigoFlag.length();
+        final int indexNome = msg.indexOf(nomeFlag) + nomeFlag.length();
+        final int indexDescricao = msg.indexOf(descricaoFlag) + descricaoFlag.length();
+        final int indexLocal = msg.indexOf(localFlag) + localFlag.length();
+        final int indexCategoria = msg.indexOf(categoriaFlag) + categoriaFlag.length();
 
-        String msgCodigo = msg.substring(codigoIndex, msg.indexOf(nome) - 1);
-        String msgNome = msg.substring(nomeIndex, msg.indexOf(descricao) - 1);
-        String msgDescricao = msg.substring(descricaoIndex, msg.indexOf(local) - 1);
-        String msgLocalizacao = msg.substring(localizacaoIndex, msg.indexOf(categoria) - 1);
-        String msgCategoria = msg.substring(categoriaIndex);
+        String codigo = msg.substring(indexCodigo, msg.indexOf(nomeFlag) - 1);
+        String nome = msg.substring(indexNome, msg.indexOf(descricaoFlag) - 1);
+        String descricao = msg.substring(indexDescricao, msg.indexOf(localFlag) - 1);
+        String local = msg.substring(indexLocal, msg.indexOf(categoriaFlag) - 1);
+        String categoria = msg.substring(indexCategoria);
 
-        String idLocal = localizacao.find(msgLocalizacao, con);
+        // Procura o local no banco de dados
+        String idLocal = locais.find(local, con);
 
+        // Se local existir
         if(idLocal != null)
         {
-            String idCategoria = categorias.find(msgCategoria, con);
-            System.out.println(msgCategoria);
+            // Procura categoria no banco de dados
+            String idCategoria = categorias.find(categoria, con);
+
+            // Se categoria existir
             if(idCategoria != null)
-                return bens.cadastrarBem(new Bem(msgCodigo, msgNome, msgDescricao, msgLocalizacao, msgCategoria), idCategoria, idLocal, con);
+                return bens.cadastrar(new Bem(codigo, nome, descricao, local, categoria), idCategoria, idLocal, con);
             else
             {
                 bot.execute(new SendMessage(chatId, "Categoria não cadastrada!"));
@@ -184,46 +216,63 @@ class Bot
         }
     }
 
+    /**
+     * @param msg mensagem enviada pelo usuario
+     * @return true se conseguir cadastrar a categoria do bem e false caso nao
+     * @throws SQLException tratamento basico de exececao
+     */
     private boolean cadastrarCategoriaBem(String msg) throws SQLException
     {
-        String codigo = "-codigo ";
-        String nome = "-nome ";
-        String descricao = "-descrição ";
+        String codigoFlag = "-codigoFlag ";
+        String nomeFlag = "-nomeFlag ";
+        String descricaoFlag = "-descrição ";
 
-        final int codigoIndex = msg.indexOf(codigo) + codigo.length();
-        final int nomeIndex = msg.indexOf(nome) + nome.length();
-        final int descricaoIndex = msg.indexOf(descricao) + descricao.length();
+        final int indexCodigo = msg.indexOf(codigoFlag) + codigoFlag.length();
+        final int indexNome = msg.indexOf(nomeFlag) + nomeFlag.length();
+        final int indexDescricao = msg.indexOf(descricaoFlag) + descricaoFlag.length();
 
-        String msgCodigo = msg.substring(codigoIndex, msg.indexOf(nome) - 1);
-        String msgNome = msg.substring(nomeIndex, msg.indexOf(descricao) - 1);
-        String msgDescricao = msg.substring(descricaoIndex);
+        String codigo = msg.substring(indexCodigo, msg.indexOf(nomeFlag) - 1);
+        String nome = msg.substring(indexNome, msg.indexOf(descricaoFlag) - 1);
+        String descricao = msg.substring(indexDescricao);
 
-        String idCategoria = categorias.find(msgNome, con);
+        // Procura categoria no banco
+        String idCategoria = categorias.find(nome, con);
+        // Se categoria nao esta cadastrada
         if(idCategoria == null)
-            return categorias.cadastrarCategoria(new Categoria(msgCodigo, msgNome, msgDescricao), con);
+            return categorias.cadastrarCategoria(new Categoria(codigo, nome, descricao), con);
         else
             return false;
     }
 
+    /**
+     * @param msg mensagem enviada pelo usuario
+     * @return true se conseguir cadastrar o local, false caso nao
+     * @throws SQLException tratamento basico de excecao
+     */
     private boolean cadastrarLocalizacao(String msg) throws SQLException
     {
-        String start = "-local ";
-        String end = "-descrição ";
+        String localFlag = "-local ";
+        String descricaoFlag = "-descrição ";
 
-        final int beginIndex = msg.indexOf(start) + start.length();
-        final int endIndex = msg.indexOf(end) + end.length();
+        final int indexLocal = msg.indexOf(localFlag) + localFlag.length();
+        final int indexDescricao = msg.indexOf(descricaoFlag) + descricaoFlag.length();
 
-        String local = msg.substring(beginIndex, msg.indexOf(end) - 1);
-        String descricao = msg.substring(endIndex);
+        String local = msg.substring(indexLocal, msg.indexOf(descricaoFlag) - 1);
+        String descricao = msg.substring(indexDescricao);
 
-        String idLocal = localizacao.find(local, con);
+        // Procura local no banco
+        String idLocal = locais.find(local, con);
 
+        // Se local nao existe
         if(idLocal == null)
-            return localizacao.cadastrarLocal(new Local(local, descricao), con);
+            return locais.cadastrarLocal(new Local(local, descricao), con);
         else
             return false;
     }
 
+    /**
+     * Conecta com o banco de dados
+     */
     private void connect()
     {
         try

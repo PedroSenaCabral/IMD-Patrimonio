@@ -8,36 +8,11 @@ import java.util.ArrayList;
 
 class Categorias
 {
-
     private ArrayList<Categoria> categorias;
-    private Categoria nomeCategoria;
-
-    /*
-     * Construtor de categorias
-     */
-    Categorias(ArrayList<Categoria> categorias)
-    {
-        this.categorias = categorias;
-    }
 
     Categorias()
     {
         this.categorias = new ArrayList<>();
-    }
-
-    public void setCategorias(ArrayList<Categoria> categorias)
-    {
-        this.categorias = categorias;
-    }
-
-    void setCategoria(Categoria categoria)
-    {
-        this.nomeCategoria = categoria;
-    }
-
-    public ArrayList<Categoria> getCategorias()
-    {
-        return categorias;
     }
 
     /*
@@ -67,6 +42,14 @@ class Categorias
             return false;
     }
 
+    /**
+     * Busca por um objeto categoria, usando seu nome, no banco
+     *
+     * @param categoria categoria(objeto) a ser procurada no banco
+     * @param con       conexao com o banco
+     * @return retorna true se encontrar categoria, false se nao
+     * @throws SQLException tratamento basico de excecao
+     */
     private boolean find(Categoria categoria, Connection con) throws SQLException
     {
         String sql = "SELECT id FROM categorias WHERE nome = ?";
@@ -78,6 +61,31 @@ class Categorias
         ResultSet result = stmt.executeQuery();
 
         return !result.next();
+    }
+
+
+    /**
+     * Busca por um nome de categoria no banco
+     *
+     * @param categoria categoria(string) a ser procurada no banco
+     * @param con       conexao com o banco
+     * @return retorna true se encontrar categoria, false se nao
+     * @throws SQLException tratamento basico de excecao
+     */
+    String find(String categoria, Connection con) throws SQLException
+    {
+        String sql = "SELECT id FROM categorias WHERE nome = ?";
+
+        PreparedStatement stmt = con.prepareStatement(sql);
+
+        stmt.setString(1, categoria);
+
+        ResultSet result = stmt.executeQuery();
+
+        if(result.next())
+            return result.getString("id");
+        else
+            return null;
     }
 
     /*
@@ -98,7 +106,7 @@ class Categorias
     {
         for(Categoria categoria: categorias)
         {
-            if(nome.equals(this.nomeCategoria.getNome()))
+            if(nome.equals(categoria.getNome()))
             {
                 categorias.remove(categoria);
             }
@@ -115,21 +123,5 @@ class Categorias
         {
             System.out.println(categoria);
         }
-    }
-
-    String find(String categoria, Connection con) throws SQLException
-    {
-        String sql = "SELECT id FROM categorias WHERE nome = ?";
-
-        PreparedStatement stmt = con.prepareStatement(sql);
-
-        stmt.setString(1, categoria);
-
-        ResultSet result = stmt.executeQuery();
-
-        if(result.next())
-            return result.getString("id");
-        else
-            return null;
     }
 }

@@ -15,11 +15,6 @@ public class Bens
         bens = new ArrayList<>();
     }
 
-    public ArrayList<Bem> getBens()
-    {
-        return bens;
-    }
-
     /*
      * Listar os bens
      */
@@ -89,7 +84,15 @@ public class Bens
         }
     }
 
-    boolean cadastrarBem(Bem bem, String idCategoria, String idLocal, Connection con) throws SQLException
+    /**
+     * @param bem         bem a ser cadastrado
+     * @param idCategoria categoria a qual o bem pertence
+     * @param idLocal     local ao qual o bem pertence
+     * @param con         conexao com o banco
+     * @return true se conseguir cadastrar o bem, false se nao
+     * @throws SQLException tratamento basico de excecao
+     */
+    boolean cadastrar(Bem bem, String idCategoria, String idLocal, Connection con) throws SQLException
     {
 
         if(find(bem, con))
@@ -115,6 +118,12 @@ public class Bens
             return false;
     }
 
+    /**
+     * @param bem bem a ser procurado no banco
+     * @param con conexao com o banco
+     * @return retorna true se existe, falso se nao
+     * @throws SQLException tratamento basico de excecao
+     */
     private boolean find(Bem bem, Connection con) throws SQLException
     {
         String sql = "SELECT id FROM bens WHERE codigo = ?";
