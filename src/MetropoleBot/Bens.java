@@ -5,17 +5,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 class Bens
 {
-    private ArrayList<Bem> bens;
-
-    Bens()
-    {
-        bens = new ArrayList<>();
-    }
-
     /**
      * @param bem         bem a ser cadastrado
      * @param idCategoria categoria a qual o bem pertence
@@ -29,8 +21,6 @@ class Bens
 
         if(find(bem, con))
         {
-            this.bens.add(bem);
-
             String sql = "INSERT INTO bens (codigo, nome, descricao, idLocalizacao, idCategoria) values(?, ?, ?, ?, ?)";
 
             PreparedStatement stmt = con.prepareStatement(sql);
@@ -75,6 +65,7 @@ class Bens
      * @param con   conexao com o banco
      * @param local local onde o bem esta
      * @return retorna uma lista de bens
+     * @throws SQLException tratamento basico de excecao
      */
     ResultSet listFromLoc(Connection con, String local) throws SQLException
     {
@@ -202,4 +193,24 @@ class Bens
 
         return report;
     }
+
+
+    /**
+     * Apaga o bem se existir, caso contrario nao faz nada
+     *
+     * @param codigo categoria a ser apagada
+     * @param con    conexao com o banco
+     * @throws SQLException tratamento basico de excecao
+     * @return retorna true se conseguir deletar, false do contrario
+     */
+    public boolean delete(String codigo, Connection con) throws SQLException
+    {
+        String sql = "delete from bens where bens.codigo = ?";
+        PreparedStatement stmt = con.prepareStatement(sql);
+
+        stmt.setString(1, codigo);
+
+        return stmt.executeUpdate() > 0;
+    }
+
 }

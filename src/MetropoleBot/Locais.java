@@ -98,9 +98,34 @@ class Locais
      * Verifica se a localizacao nao esta em uso no banco de dados, se nao estiver, apaga, caso contrario nao faz nada
      *
      * @param local localizacao a ser apagada
+     * @param con   conexao com o banco
+     * @throws SQLException tratamento basico de excecao
+     * @return retorna true se conseguir apagar a localizacao, false caso contrario
      */
-    public void delete(String local)
+    public boolean delete(String local, Connection con) throws SQLException
     {
-        // TODO delete from locais where locais.nome = 'corredor'
+        String sql = "SELECT l.id FROM locais l INNER JOIN bens b on b.idLocalizacao = l.id WHERE l.nome = ?";
+
+        PreparedStatement stmt = con.prepareStatement(sql);
+
+        stmt.setString(1, local);
+
+
+        ResultSet result = stmt.executeQuery();
+
+        if(result.next())
+        {
+            return false;
+        }
+        else
+        {
+            sql = "delete from locais where locais.nome = ?";
+
+            stmt = con.prepareStatement(sql);
+
+            stmt.setString(1, local);
+
+            return stmt.executeUpdate() > 0;
+        }
     }
 }

@@ -4,28 +4,21 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 class Categorias
 {
-    private ArrayList<Categoria> categorias;
-
-    Categorias()
-    {
-        this.categorias = new ArrayList<>();
-    }
-
-    /*
-     * Cria novas categorias
+    /**
+     * Cadastra categoria no banco caso ela nao exista
+     *
+     * @param categoria categoria a ser cadastrada
+     * @param con       conexao com o banco
+     * @return retorna true se a categoria nao existe e consiga cadastrar, false do contrario
+     * @throws SQLException tratamento basico de excecao
      */
     boolean cadastrarCategoria(Categoria categoria, Connection con) throws SQLException
     {
         if(find(categoria, con))
         {
-
-            this.categorias.add(categoria);
-
-
             String sql = "INSERT INTO categorias(codigo, nome, descricao) values(?, ?, ?)";
 
             PreparedStatement stmt = con.prepareStatement(sql);
@@ -93,6 +86,7 @@ class Categorias
      *
      * @param con conexao com o banco
      * @return retorna uma lista de categorias, ou null caso nao possua categorias cadastradas
+     * @throws SQLException tratamento basico de excecao
      */
     ResultSet list(Connection con) throws SQLException
     {
@@ -101,5 +95,40 @@ class Categorias
         PreparedStatement stmt = con.prepareStatement(sql);
 
         return stmt.executeQuery();
+    }
+
+    /**
+     * Verifica se a categoria nao esta em uso no banco de dados, se nao estiver, apaga, caso contrario nao faz nada
+     *
+     * @param categoria categoria a ser apagada
+     * @param con       conexao com o banco
+     * @return retorna true se conseguir apagar a categoria, false caso contrario
+     * @throws SQLException tratamento basico de excecao
+     */
+    public boolean delete(String categoria, Connection con) throws SQLException
+    {
+        String sql = "SELECT c.id FROM categorias c INNER JOIN bens b on b.idCategoria = c.id WHERE c.nome = ?";
+
+        PreparedStatement stmt = con.prepareStatement(sql);
+
+        stmt.setString(1, categoria);
+
+
+        ResultSet result = stmt.executeQuery();
+
+        if(result.next())
+        {
+            return false;
+        }
+        else
+        {
+            sql = "DELETE FROM categorias WHERE nome = ?";
+
+            stmt = con.prepareStatement(sql);
+
+            stmt.setString(1, categoria);
+
+            return stmt.executeUpdate() > 0;
+        }
     }
 }
